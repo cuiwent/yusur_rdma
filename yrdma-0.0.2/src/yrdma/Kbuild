@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: GPL-2.0 or Linux-OpenIB
+# Copyright (c) 2018 - 2021 Intel Corporation
+# Makefile for the Yusur Ethernet Protocol Driver for RDMA
+#
+ifneq (${LINUXINCLUDE},)
+LINUXINCLUDE := \
+        ${INCLUDE_KCONF_HDR} \
+        ${INCLUDE_AUTOCONF_HDR} \
+        ${INCLUDE_COMPAT_HDR} \
+        ${UTSRELEASE_HDR} \
+        ${LINUXINCLUDE}
+endif
+
+#TODO: change absolute include path below
+ccflags-y := -Werror -Wall -Wno-cast-function-type -I/root/work/rdma-work/current/yether-0.0.1/src/yether
+obj-m += yrdma.o
+
+yrdma-objs := main.o \
+            yrdma_if.o \
+            rnic.o \
+            verbs.o \
+            mem.o
+
+CFLAGS_trace.o = -I$(src)
