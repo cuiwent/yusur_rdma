@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: GPL-2.0 or Linux-OpenIB
+# Copyright (c) 2018 - 2021 Yusur Tech
+# Makefile for the Yusur Ethernet Protocol Driver for RDMA
+#
+ifneq (${LINUXINCLUDE},)
+LINUXINCLUDE := \
+        ${INCLUDE_KCONF_HDR} \
+        ${INCLUDE_AUTOCONF_HDR} \
+        ${INCLUDE_COMPAT_HDR} \
+        ${UTSRELEASE_HDR} \
+        ${LINUXINCLUDE}
+endif
+
+ccflags-y := -Werror -Wall -Wno-cast-function-type
+obj-m += yether.o
+
+yether-objs := sn_ether.o \
+            ysn3.o
+
+CFLAGS_trace.o = -I$(src)
