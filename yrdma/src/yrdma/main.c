@@ -41,19 +41,110 @@
 // 	unregister_netdevice_notifier(&yrdma_netdevice_notifier);
 // }
 
+static int yusur_roce_init(struct xilinx_ib_dev *ibdev)
+{
+	// int err;
+	// struct device_node *net_node;
+	// struct device_node *np;
+	struct xrnic_local *xl;
+	struct pci_dev *pci_dev;
+	// unsigned long debug_phys;
+	// struct net_device *netdev;
+	// struct resource resource;ß
+	// u32 qpn, rtr_count;
+	// u64 rtr_addr = 0;
+
+	if(ibdev->pci_dev) {
+		dev_dbg(ibdev->dev, "%s: <---------- \n", __func__);
+		pci_dev = ibdev->pci_dev;
+		ibdev->mtu = QP_PMTU_4096;
+		//TODO: check driver data
+		// platform_set_drvdata(pdev, ibdev);
+
+		xl = xrnic_hw_init(pci_dev, ibdev);
+		if (!xl) {
+			dev_err(ibdev->dev, "xrnic init failed\n");
+			return -ENODEV;
+		}
+		ibdev->xl = xl;
+		xl->xib = ibdev;
+
+	} else {
+		pr_info("%s: pci_dev is NULL!!!", __func__);
+		return -1;
+	}
+
+	return 0;
+}
+
+static void yusur_roce_exit(struct xilinx_ib_dev *ib_dev)
+{
+
+}
+
 static int yusur_roce_hw_init_instance(struct ysn3_handle *handle)
 {
-	pr_info("yusur_roce_hw_init_instance: %d.%d.%d\n", DRV_VER_MAJOR,
+	struct xilinx_ib_dev *ibdev;
+	int ret;
+
+	pr_info("%s: %d.%d.%d\n", __func__,DRV_VER_MAJOR,
 		DRV_VER_MINOR, DRV_VER_BUILD);
+
+	if(&handle->pdev->dev)
+		dev_dbg(&handle->pdev->dev, "%s : <---------- \n", __func__);
+	//TODO:
+	//else
+	//	no pci device handle
+
+	// ibdev = (struct xilinx_ib_dev *)ib_alloc_device(sizeof(*ibdev));
+	ibdev = (struct xilinx_ib_dev *)ib_alloc_device(xilinx_ib_dev, ib_dev);
+	if (!ibdev)
+		return -ENOMEM;
+
+	ibdev->pci_dev = handle->pdev;
+	ibdev->dev = &handle->pdev->dev;
+	handle->priv = ibdev;
+
+	pr_info("%s: alloc ib device done\n", __func__);
+
+	ret = yusur_roce_init(ibdev);
+	if (ret) {
+		dev_err(ibdev->dev, "Yusur RoCE Engine init failed!\n");
+		goto error_failed_kzalloc;
+	}
+
 	return 0;
+
+//TODO:
+// error_failed_get_cfg:
+// 	kfree(hr_dev->priv);
+
+error_failed_kzalloc:
+	ib_dealloc_device(&ibdev->ib_dev);
+
+	return ret;
 }
 
 static void yusur_roce_hw_uninit_instance(struct ysn3_handle *handle,
 					   bool reset)
 {
+	struct xilinx_ib_dev *ibdev = (struct xilinx_ib_dev *)handle->priv;
+
 	pr_info("yusur_roce_hw_uninit_instance: %d.%d.%d\n", DRV_VER_MAJOR,
 		DRV_VER_MINOR, DRV_VER_BUILD);
 
+	if(&handle->pdev->dev)
+		dev_dbg(&handle->pdev->dev, "%s : <---------- \n", __func__);
+
+	if (!ibdev)
+		return;
+
+	yusur_roce_exit(ibdev);
+
+	//TODO:
+	// kfree(ibdev->priv);
+	ib_dealloc_device(&ibdev->ib_dev);
+	pr_info("%s: dealloc ib device done\n", __func__);
 }
 
 static int yusur_roce_hw_reset_notify(struct ysn3_handle *handle,
@@ -77,7 +168,7 @@ static struct ysn3_client yusur_roce_hw_client = {
 
 static int __init yrdma_init_module(void)
 {
-	pr_info("yrdma driver version: %d.%d.%d\n", DRV_VER_MAJOR,
+	pr_info("%s: yrdma driver version: %d.%d.%d\n", __func__, DRV_VER_MAJOR,
 		DRV_VER_MINOR, DRV_VER_BUILD);
 
 	return ysn3_register_client(&yusur_roce_hw_client);

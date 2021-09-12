@@ -66,6 +66,8 @@ struct xilinx_ib_dev_attr {
 struct xilinx_ib_dev {
 	struct ib_device		ib_dev;
 	struct platform_device		*pdev;
+	struct pci_dev		*pci_dev;
+	struct device		*dev;
 	struct net_device		*netdev;
 	u8				active_speed;
 	u8				active_width;
