@@ -49,13 +49,13 @@
 #include <rdma/ib_umem.h>
 #include <rdma/ib_cache.h>
 #include "status.h"
+#include "xib.h"
 
 #define YRDMA_SN_PDEV_NAME	"rnicpci"
 
+int yusur_roce_init(struct xilinx_ib_dev *ibdev);
+void yusur_roce_exit(struct xilinx_ib_dev *ib_dev);
 void xib_set_dev_caps(struct ib_device *ibdev);
 int update_mtu(struct net_device *dev);
 int set_ip_address(struct net_device *dev, u32 is_ipv4);
-int yrdma_probe(struct platform_device *pdev);
-int yrdma_remove(struct platform_device *pdev);
-int yrdma_suspend(struct platform_device *pdev, pm_message_t state);
 #endif /* YRDMA_MAIN_H */

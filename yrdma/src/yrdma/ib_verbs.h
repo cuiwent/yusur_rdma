@@ -14,6 +14,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+#include "xib.h"
+
 #ifndef _XIB_IB_VERBS_H_
 #define _XIB_IB_VERBS_H_
 
@@ -238,45 +240,45 @@ static inline void xib_inc_sw_gsi_cons(struct xib_rq *rq)
 	rq->gsi_cons = (rq->gsi_cons + 1) % rq->max_wr;
 }
 
-// int xib_get_rq_recd(struct xib_rq *rq, u32 rq_wr_current);
-// int xib_poll_kernel_cq(struct ib_cq *ibcq, int num_entries, struct ib_wc *wc);
+int xib_get_rq_recd(struct xib_rq *rq, u32 rq_wr_current);
+int xib_poll_kernel_cq(struct ib_cq *ibcq, int num_entries, struct ib_wc *wc);
 
-// struct ib_qp *xib_gsi_create_qp(struct ib_pd *pd,
-// 				struct ib_qp_init_attr *init_attr);
+struct ib_qp *xib_gsi_create_qp(struct ib_pd *pd,
+				struct ib_qp_init_attr *init_attr);
 
-// int xib_gsi_poll_cq(struct ib_cq *ibcq, int num_entries, struct ib_wc *wc);
-// struct ib_mr *xib_reg_user_mr(struct ib_pd *pd, u64 start, u64 length,
-// 				   u64 virt_addr, int access_flags,
-// 				   struct ib_udata *udata);
+int xib_gsi_poll_cq(struct ib_cq *ibcq, int num_entries, struct ib_wc *wc);
+struct ib_mr *xib_reg_user_mr(struct ib_pd *pd, u64 start, u64 length,
+				   u64 virt_addr, int access_flags,
+				   struct ib_udata *udata);
 
-// struct ib_mr *xib_reg_user_mr_ex(struct ib_pd *pd, u64 start, u64 length,
-// 				   u64 virt_addr, int access_flags,
-// 				   struct ib_udata *udata);
-// struct ib_qp *xib_create_user_qp(struct ib_pd *pd,
-// 				struct ib_qp_init_attr *init_attr,
-// 				struct ib_udata *udata);
+struct ib_mr *xib_reg_user_mr_ex(struct ib_pd *pd, u64 start, u64 length,
+				   u64 virt_addr, int access_flags,
+				   struct ib_udata *udata);
+struct ib_qp *xib_create_user_qp(struct ib_pd *pd,
+				struct ib_qp_init_attr *init_attr,
+				struct ib_udata *udata);
 
-// struct ib_qp *xib_create_kernel_qp(struct ib_pd *pd,
-// 				struct ib_qp_init_attr *init_attr);
-// int xib_build_qp1_send_v2(struct ib_qp *ib_qp,
-// 			const struct ib_send_wr *wr,
-// 			int payload_sz,
-// 			bool *is_udp,
-// 			u8 *ip_version);
-// int xib_kernel_qp_post_recv(struct ib_qp *ibqp, const struct ib_recv_wr *wr,
-// 				const struct ib_recv_wr **bad_wr);
-// void xrnic_send_wr(struct xib_qp *qp, struct xilinx_ib_dev *xib);
-// int xrnic_qp_set(struct xib_qp *qp);
-// int xrnic_qp_modify(struct xib_qp *qp, struct xib_qp_modify_params *params);
-// void xrnic_set_dest_ip(struct xib_qp *qp);
-// int xib_dealloc_qp_buffers(struct ib_device *ibdev, struct xib_qp *qp);
-// int xib_dealloc_user_qp_buffers(struct ib_device *ibdev, struct xib_qp *qp);
-// int xib_dealloc_gsi_qp_buffers(struct ib_device *ibdev, struct xib_qp *qp);
-// int xrnic_qp_disable(struct xib_qp *qp);
-// int xib_get_payload_size(struct ib_sge *sg_list, int num_sge);
-// int xib_rst_rq(struct xib_qp *qp);
-// int xib_rst_cq_sq(struct xib_qp *qp, int nvmf_rhost);
-// void xib_drain_sq(struct ib_qp *ibqp);
-// void xib_drain_rq(struct ib_qp *ibqp);
+struct ib_qp *xib_create_kernel_qp(struct ib_pd *pd,
+				struct ib_qp_init_attr *init_attr);
+int xib_build_qp1_send_v2(struct ib_qp *ib_qp,
+			const struct ib_send_wr *wr,
+			int payload_sz,
+			bool *is_udp,
+			u8 *ip_version);
+int xib_kernel_qp_post_recv(struct ib_qp *ibqp, const struct ib_recv_wr *wr,
+				const struct ib_recv_wr **bad_wr);
+void xrnic_send_wr(struct xib_qp *qp, struct xilinx_ib_dev *xib);
+int xrnic_qp_set(struct xib_qp *qp);
+int xrnic_qp_modify(struct xib_qp *qp, struct xib_qp_modify_params *params);
+void xrnic_set_dest_ip(struct xib_qp *qp);
+int xib_dealloc_qp_buffers(struct ib_device *ibdev, struct xib_qp *qp);
+int xib_dealloc_user_qp_buffers(struct ib_device *ibdev, struct xib_qp *qp);
+int xib_dealloc_gsi_qp_buffers(struct ib_device *ibdev, struct xib_qp *qp);
+int xrnic_qp_disable(struct xib_qp *qp);
+int xib_get_payload_size(struct ib_sge *sg_list, int num_sge);
+int xib_rst_rq(struct xib_qp *qp);
+int xib_rst_cq_sq(struct xib_qp *qp, int nvmf_rhost);
+void xib_drain_sq(struct ib_qp *ibqp);
+void xib_drain_rq(struct ib_qp *ibqp);
 #endif /* _XIB_IB_VERBS_H_ */
 

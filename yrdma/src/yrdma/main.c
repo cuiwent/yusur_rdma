@@ -1,102 +1,72 @@
 // SPDX-License-Identifier: GPL-2.0 or Linux-OpenIB
 /* Copyright (c) 2015 - 2021 Intel Corporation */
 
+#include <linux/of_platform.h>
+#include <linux/of_net.h>
+#include <linux/module.h>
+#include <linux/mm.h>
+#include <rdma/ib_addr.h>
+#include <rdma/ib_smi.h>
+#include <rdma/ib_user_verbs.h>
+#include <rdma/ib_cache.h>
+#include <rdma/ib_umem.h>
+//TODO: add kernel patch for below file
+// #include <rdma/xib-abi.h>
+#include <rdma/ib_verbs.h>
+#include <rdma/uverbs_ioctl.h>
+#include <net/addrconf.h>
+#include <linux/of_address.h>
+#include <linux/jiffies.h>
 #include "ysn3.h"
 #include "main.h"
 #include "xib.h"
+#include "yusur_roce_device.h"
 
 #define DRV_VER_MAJOR 0
 #define DRV_VER_MINOR 0
-#define DRV_VER_BUILD 1
+#define DRV_VER_BUILD 2
 #define DRV_VER	__stringify(DRV_VER_MAJOR) "."		\
 	__stringify(DRV_VER_MINOR) "." __stringify(DRV_VER_BUILD)
 
-/****************************************************************************************************************/
+struct xilinx_ib_dev *ibdev;
+const char* ifname = "eth0";
+
+unsigned int app_qp_cnt = 10;
+module_param_named(max_app_qp, app_qp_cnt, int, 0644);
+unsigned int retry_time = 0xD;
+module_param_named(rtime, retry_time, int, 0644);
+
+unsigned int app_qp_depth = 16;
+module_param_named(max_q_depth, app_qp_depth, int, 0644);
+
+unsigned int max_rq_sge = 16;
+module_param(max_rq_sge, int, 0644);
 
 
-
-// static struct notifier_block yrdma_inetaddr_notifier = {
-// 	.notifier_call = yrdma_inetaddr_event
-// };
-
-// static struct notifier_block yrdma_net_notifier = {
-// 	.notifier_call = yrdma_net_event
-// };
-
-// static struct notifier_block yrdma_netdevice_notifier = {
-// 	.notifier_call = yrdma_netdevice_event
-// };
-
-// static void yrdma_register_notifiers(void)
-// {
-// 	register_inetaddr_notifier(&yrdma_inetaddr_notifier);
-// 	register_netevent_notifier(&yrdma_net_notifier);
-// 	register_netdevice_notifier(&yrdma_netdevice_notifier);
-// }
-
-// static void yrdma_unregister_notifiers(void)
-// {
-// 	unregister_netevent_notifier(&yrdma_net_notifier);
-// 	unregister_inetaddr_notifier(&yrdma_inetaddr_notifier);
-// 	unregister_netdevice_notifier(&yrdma_netdevice_notifier);
-// }
-
-static int yusur_roce_init(struct xilinx_ib_dev *ibdev)
-{
-	// int err;
-	// struct device_node *net_node;
-	// struct device_node *np;
-	struct xrnic_local *xl;
-	struct pci_dev *pci_dev;
-	// unsigned long debug_phys;
-	// struct net_device *netdev;
-	// struct resource resource;ß
-	// u32 qpn, rtr_count;
-	// u64 rtr_addr = 0;
-
-	if(ibdev->pci_dev) {
-		dev_dbg(ibdev->dev, "%s: <---------- \n", __func__);
-		pci_dev = ibdev->pci_dev;
-		ibdev->mtu = QP_PMTU_4096;
-		//TODO: check driver data
-		// platform_set_drvdata(pdev, ibdev);
-
-		xl = xrnic_hw_init(pci_dev, ibdev);
-		if (!xl) {
-			dev_err(ibdev->dev, "xrnic init failed\n");
-			return -ENODEV;
-		}
-		ibdev->xl = xl;
-		xl->xib = ibdev;
-
-	} else {
-		pr_info("%s: pci_dev is NULL!!!", __func__);
-		return -1;
-	}
-
-	return 0;
-}
-
-static void yusur_roce_exit(struct xilinx_ib_dev *ib_dev)
-{
-
-}
+static const struct pci_device_id yusur_roce_hw_pci_tbl[] = {
+	{PCI_DEVICE(VENDOR_ID, DEVICE_ID), 0},
+	/* required last entry */
+	{0, }
+};
 
 static int yusur_roce_hw_init_instance(struct ysn3_handle *handle)
 {
-	struct xilinx_ib_dev *ibdev;
 	int ret;
+	const struct pci_device_id *id;
 
 	pr_info("%s: %d.%d.%d\n", __func__,DRV_VER_MAJOR,
 		DRV_VER_MINOR, DRV_VER_BUILD);
 
-	if(&handle->pdev->dev)
-		dev_dbg(&handle->pdev->dev, "%s : <---------- \n", __func__);
-	//TODO:
-	//else
-	//	no pci device handle
+	handle->rinfo.instance_state = YUSUR_ROCE_STATE_INIT;
 
-	// ibdev = (struct xilinx_ib_dev *)ib_alloc_device(sizeof(*ibdev));
+	id = pci_match_id(yusur_roce_hw_pci_tbl, handle->pdev);
+	if (!id) {
+		dev_warn(ibdev->dev, "%s: <---------- \n", __func__);
+		return 0;
+	}
+
+	dev_dbg(&handle->pdev->dev, "%s : <---------- \n", __func__);
+
 	ibdev = (struct xilinx_ib_dev *)ib_alloc_device(xilinx_ib_dev, ib_dev);
 	if (!ibdev)
 		return -ENOMEM;
@@ -109,9 +79,12 @@ static int yusur_roce_hw_init_instance(struct ysn3_handle *handle)
 
 	ret = yusur_roce_init(ibdev);
 	if (ret) {
-		dev_err(ibdev->dev, "Yusur RoCE Engine init failed!\n");
+		dev_err(ibdev->dev, "Yusur RoCE Engine HW init failed!\n");
+		handle->rinfo.instance_state = YUSUR_ROCE_STATE_NON_INIT;
 		goto error_failed_kzalloc;
 	}
+
+	handle->rinfo.instance_state = YUSUR_ROCE_STATE_INITED;
 
 	return 0;
 
@@ -133,8 +106,7 @@ static void yusur_roce_hw_uninit_instance(struct ysn3_handle *handle,
 	pr_info("yusur_roce_hw_uninit_instance: %d.%d.%d\n", DRV_VER_MAJOR,
 		DRV_VER_MINOR, DRV_VER_BUILD);
 
-	if(&handle->pdev->dev)
-		dev_dbg(&handle->pdev->dev, "%s : <---------- \n", __func__);
+	dev_dbg(&handle->pdev->dev, "%s : <---------- \n", __func__);
 
 	if (!ibdev)
 		return;

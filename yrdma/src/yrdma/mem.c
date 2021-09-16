@@ -18,13 +18,15 @@
 #include <linux/of_platform.h>
 #include <linux/of_address.h>
 #include <linux/list.h>
+#include <linux/pci.h>
 #include "xib.h"
 
 static struct device *xib_get_alloc_dev(char *from, struct xilinx_ib_dev *xib)
 {
 	struct device *dev;
 
-	dev = &xib->pdev->dev;
+	//TODO: use pci device, instead of platform
+	dev = &xib->pci_dev->dev;
 	return dev;
 }
 
@@ -52,4 +54,23 @@ void xib_free_coherent(void *xib_dev,
 	dev = xib_get_alloc_dev("pl", xib);
 	if (dev)
 		dma_free_coherent(dev, size, cpu_addr, dma_handle);
+}
+
+void *xib_zalloc_coherent(char *from, struct xilinx_ib_dev *xib,
+		size_t len, u64 *dma_handle, gfp_t flag)
+{
+	return xib_alloc_coherent(from, xib, len, dma_handle,
+				       flag | __GFP_ZERO);
+}
+
+bool xib_pl_present(void)
+{
+#ifdef ARCH_HAS_PS
+	if (pl_alloc_dev)
+		return true;
+	else
+		return false;
+#else
+	return true;
+#endif
 }

@@ -253,6 +253,7 @@ struct xlnx_ernic_config {
 struct xrnic_local {
 	struct xilinx_ib_dev		*xib;
 	struct platform_device		*pdev;
+	struct pci_dev				*pci_dev;
 	u8 __iomem			*reg_base;
 	int				irq;
 	u64				qp1_sq_db_p;
@@ -289,7 +290,8 @@ struct xrnic_wr
 	u32	wrid;
 	u64	l_addr;
 	u32	length;
-	u32	opcode;
+	//u32	opcode;
+	int	opcode;
 	u64	r_offset;
 	u32	r_tag;
 #define XRNIC_MAX_SDATA		16
@@ -333,19 +335,21 @@ static inline u32 xrnic_ior(struct xrnic_local *xl, off_t offset)
 	return ioread32( (xl->reg_base + offset));
 }
 
-// u64 xrnic_get_sq_db_addr(struct xrnic_local *xl, int hw_qpn);
-// u64 xrnic_get_rq_db_addr(struct xrnic_local *xl, int hw_qpn);
+u64 xrnic_get_sq_db_addr(struct xrnic_local *xl, int hw_qpn);
+u64 xrnic_get_rq_db_addr(struct xrnic_local *xl, int hw_qpn);
 struct xrnic_local *xrnic_hw_init(struct pci_dev *pdev, struct xilinx_ib_dev *xib);
 void xrnic_hw_deinit(struct xilinx_ib_dev *xib);
 void xrnic_set_mac(struct xrnic_local *xl, u8 *mac);
 int xrnic_start(struct xrnic_local *xl);
 void config_raw_ip(struct xrnic_local *xl, u32 base, u32 *ip, bool is_ipv6);
-// int xrnic_qp_set_pd(struct xilinx_ib_dev *xib, int qpn, int pdn);
-// int xrnic_set_pd(struct xilinx_ib_dev *xib, int pdn);
-// int xrnic_reg_mr(struct xilinx_ib_dev *xib, u64 va, u64 len,
-// 		u64 *pbl_tbl, int umem_pgs, int pdn, u32 key);
-// int xrnic_unreg_mr(struct xilinx_ib_dev *xib, u32 data);
+void get_raw_ip(struct xrnic_local *xl, u32 base, u32 *addr, bool is_ipv6);
+void xrnic_set_ip_address(struct xrnic_local *xl, u8 *addr, int len);
+int xrnic_qp_set_pd(struct xilinx_ib_dev *xib, int qpn, int pdn);
+int xrnic_set_pd(struct xilinx_ib_dev *xib, int pdn);
+int xrnic_reg_mr(struct xilinx_ib_dev *xib, u64 va, u64 len,
+		u64 *pbl_tbl, int umem_pgs, int pdn, u32 key);
+int xrnic_unreg_mr(struct xilinx_ib_dev *xib, u32 data);
 dma_addr_t xrnic_buf_alloc(struct xrnic_local *xl, u32 size, u32 count);
-// void qp_set_ipv6_destination(struct xrnic_local *xib, int qpn, u8* raw_ipv6);
-// int xrnic_qp_under_recovery(struct xilinx_ib_dev *xib, int hw_qpn);
+void qp_set_ipv6_destination(struct xrnic_local *xib, int qpn, u8* raw_ipv6);
+int xrnic_qp_under_recovery(struct xilinx_ib_dev *xib, int hw_qpn);
 #endif /* _XRNIC_H_ */

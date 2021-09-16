@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
+// Copyright (c) 2016-2017 Hisilicon Limited.
+// Copyright (c) 2018-2021 Yusur Tech.
+
 #ifndef __YSN3_H
 #define __YSN3_H
 
@@ -11,7 +15,8 @@
 #include <linux/types.h>
 
 /* Device IDs */
-#define YUSUR_ETH_DEV_ID_GE				0x903F
+#define VENDOR_ID 0x10EE  // Xilinx Vendor ID
+#define DEVICE_ID 0x903f
 
 enum ysn3_client_type {
 	YSN3_CLIENT_ROCE2,
@@ -33,6 +38,13 @@ struct ysn3_roce_private_info {
 	void __iomem *roce_io_base;
 	int base_vector;
 	int num_vectors;
+	/* The below attributes defined for RoCE client
+	 * initial values to them, and RoCE client can modify and use
+	 * them.
+	 */
+	unsigned long reset_state;
+	unsigned long instance_state;
+	unsigned long state;
 };
 
 struct ysn3_handle;
@@ -69,6 +81,6 @@ struct ysn3_handle {
 	};
 };
 
-void ysn3_unregister_client(struct ysn3_client *client);
 int ysn3_register_client(struct ysn3_client *client);
+void ysn3_unregister_client(struct ysn3_client *client);
 #endif

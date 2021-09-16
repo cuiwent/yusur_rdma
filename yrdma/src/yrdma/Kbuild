@@ -12,13 +12,14 @@ LINUXINCLUDE := \
 endif
 
 #TODO: change absolute include path below
-ccflags-y := -Werror -Wall -Wno-cast-function-type -I/root/work/rdma-work/current/yether-0.0.1/src/yether
+ccflags-y := -Werror -Wall -Wno-cast-function-type -I/home/wencui/work/rdma/yusur_rdma/yether/src/yether
 obj-m += yrdma.o
 
 yrdma-objs := main.o \
             yrdma_if.o \
             rnic.o \
             verbs.o \
-            mem.o
+            mem.o \
+            axidma.o
 
 CFLAGS_trace.o = -I$(src)

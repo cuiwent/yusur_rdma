@@ -21,7 +21,7 @@
 #include <linux/interrupt.h>
 #include <rdma/ib_verbs.h>
 #include "rnic.h"
-// #include "axidma.h"
+#include "axidma.h"
 
 /* ERNIC allows one memory registration per PD entry */
 #define XRNIC_SINGLE_MR_PER_PD
@@ -111,6 +111,7 @@ struct xib_pd {
 struct xib_ah {
 	struct ib_ah ib_ah;
 	struct rdma_ah_attr attr;
+	// struct rdma_ah_init_attr attr;
 };
 
 struct xib_ucontext {
